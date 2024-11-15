@@ -5,14 +5,19 @@ export async function POST(req: Request) {
   try {
     const { name, email, message } = await req.json();
 
+    console.log('Creating transporter...');
+
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+      host: 'smtp.mail.me.com',
       port: 587,
       secure: false,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
+        user: process.env.EMAIL_USER, // your full iCloud email
+        pass: process.env.EMAIL_PASSWORD // your app-specific password
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const mailOptions = {
@@ -32,15 +37,19 @@ export async function POST(req: Request) {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    console.log('Attempting to send email...');
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent:', info);
 
     return NextResponse.json({ 
       message: "Email sent successfully" 
     }, { status: 200 });
 
   } catch (error) {
+    console.error('Email error:', error);
     return NextResponse.json({ 
-      error: "Failed to send email" 
+      error: "Failed to send email",
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
